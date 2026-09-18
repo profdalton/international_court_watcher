@@ -1,9 +1,10 @@
 # International Court Watcher
 
 A single, plain-language calendar of upcoming hearings and sessions at
-six international tribunals — the ICJ, ICC, ECHR, IACtHR, ITLOS, and
-the WTO Dispute Settlement Body — pulled from each court's own public
-calendar and republished as one static site.
+seven international tribunals — the ICJ, ICC, ECHR, IACtHR, ITLOS,
+the Kosovo Specialist Chambers, and the WTO Dispute Settlement Body —
+pulled from each court's own public calendar and republished as one
+static site.
 
 Live at **internationalcourtwatcher.com**.
 
@@ -84,6 +85,12 @@ prints its own JSON when run directly.
 - **IACtHR** (`scrapers/iacthr.py`): this court publishes session
   date ranges rather than individual hearings, so entries read as
   "192nd Regular Session, through 3 Jul" rather than a case name.
+- **KSC** (`scrapers/ksc.py`): this one's a month-grid calendar
+  (`?calendar_timestamp=YYYY-MM`) rather than a flat list, so the
+  scraper has to guess which grid cells spill over from the
+  previous/next month based on row position — verified against a
+  real July 2026 page, but worth double-checking against the live
+  site after the first run.
 
 None of these will break the site — a scraper that fails or finds
 nothing just leaves that court's last-known data in place (see

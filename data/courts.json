@@ -59,6 +59,18 @@
     "granularity": "hearing",
     "accent": "#2571BB"
   },
+  "ksc": {
+    "name": "Kosovo Specialist Chambers",
+    "abbr": "KSC",
+    "seat": "The Hague, Netherlands",
+    "established": "2015",
+    "system": "Kosovo / EU-mandated",
+    "blurb": "A Kosovo court sitting in the Netherlands, trying crimes committed during and after the 1998\u20131999 Kosovo conflict.",
+    "calendar_url": "https://www.scp-ks.org/en/calendar",
+    "source_type": "html",
+    "granularity": "event",
+    "accent": "#405B77"
+  },
   "wto": {
     "name": "WTO Dispute Settlement Body",
     "abbr": "WTO DSB",

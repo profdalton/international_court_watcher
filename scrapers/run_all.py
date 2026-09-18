@@ -26,6 +26,7 @@ import iacthr
 import icc
 import icj
 import itlos
+import ksc
 import wto
 
 SCRAPERS = {
@@ -34,6 +35,7 @@ SCRAPERS = {
     "echr": echr.scrape,
     "iacthr": iacthr.scrape,
     "itlos": itlos.scrape,
+    "ksc": ksc.scrape,
     "wto": wto.scrape,
 }
 
