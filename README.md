@@ -23,7 +23,7 @@ data/courts.json       Static metadata about each tribunal
 data/hearings.json     The live data — rewritten by the scraper
 data/manual/           Hand-entered overrides, merged in on top
 scrapers/               Python scraper, one module per court
-.github/workflows/      The weekly scrape-and-commit job
+.github/workflows/      The daily scrape-and-commit job
 ```
 
 The front end (`assets/js/site.js`) fetches `data/hearings.json` and
@@ -47,7 +47,7 @@ to compile or deploy beyond pushing the files.
    "Enforce HTTPS" once it's verified (can take a few hours).
 3. **Let Actions push commits.** Under *Settings → Actions → General
    → Workflow permissions*, select "Read and write permissions" so
-   the weekly job can commit the refreshed data.
+   the daily job can commit the refreshed data.
 
 ## Running the scraper locally
 

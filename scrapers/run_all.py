@@ -2,7 +2,7 @@
 """Run every court scraper and update data/hearings.json.
 
 Usage: python scrapers/run_all.py
-Runs weekly via .github/workflows/update-calendar.yml.
+Runs daily via .github/workflows/update-calendar.yml.
 
 A scraper that raises or returns [] leaves that court's existing
 entries alone (see base.replace_court) — a bad run should never wipe
