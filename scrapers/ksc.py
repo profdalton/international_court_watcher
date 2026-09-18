@@ -15,6 +15,11 @@ that a grid always shows a few of (heuristic: the first row's high
 day-numbers belong to the previous month, the last row's low
 day-numbers belong to the next month). That heuristic is the part
 most likely to need a fix once this runs against the live page.
+
+Confirmed 403 Forbidden on a plain fetch (even with full browser
+headers), same as icc.py — see that module's docstring for what to
+try next if it keeps failing from GitHub Actions too. data/manual/
+ksc.json is the same escape hatch.
 """
 from __future__ import annotations
 
@@ -64,7 +69,7 @@ def _hearing_type(title: str) -> str:
 
 def _scrape_month(year: int, month: int) -> list[dict]:
     try:
-        html = fetch(_month_url(year, month))
+        html = fetch(_month_url(year, month), referer=BASE_URL)
     except Exception as exc:  # noqa: BLE001
         print(f"[ksc] fetch failed for {year}-{month:02d}: {exc}")
         return []

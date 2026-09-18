@@ -149,6 +149,46 @@ async function initCourtPage(slug) {
   }
 
   renderFeed(feedEl, list, courts, slug);
+
+  const meta = courts[slug] || {};
+  if (meta.news_file) {
+    await initCourtNews(slug, meta);
+  }
+}
+
+async function initCourtNews(slug, meta) {
+  const newsSection = document.getElementById('news-section');
+  const newsEl = document.getElementById('news');
+  if (!newsSection || !newsEl) return;
+
+  try {
+    const res = await fetch(`${DATA_ROOT}/data/${meta.news_file}`);
+    const data = await res.json();
+    const items = data.items || [];
+    if (items.length === 0) return;
+
+    newsEl.innerHTML = '';
+    items.forEach((item) => {
+      const { day, weekday, monthYear } = fmtDate(item.date);
+      const row = document.createElement('div');
+      row.className = 'hearing-row';
+      row.style.setProperty('--row-accent', meta.accent || '#2571bb');
+      row.innerHTML = `
+        <div><span class="date">${day}</span><span class="weekday">${weekday}</span></div>
+        <div class="time"></div>
+        <div class="court-tag"></div>
+        <div class="case">
+          <a href="${item.url}" target="_blank" rel="noopener">${item.title}</a>
+          <span class="type">${item.summary || ''}</span>
+        </div>
+      `;
+      newsEl.appendChild(row);
+    });
+    newsSection.style.display = '';
+  } catch (err) {
+    // No news file yet for this court, or it failed to load — leave
+    // the section hidden rather than showing a broken state.
+  }
 }
 
 window.ICW = { initHomepage, initCourtPage };

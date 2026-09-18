@@ -32,7 +32,7 @@ def scrape() -> list[dict]:
     main = soup.find("main") or soup
 
     blocks = []
-    for tag in main.find_all(["h2", "h3", "h4", "p"]):
+    for tag in main.find_all(["h2", "h3", "h4", "h5", "h6", "p"]):
         text = clean(tag.get_text(" "))
         if text:
             blocks.append(text)

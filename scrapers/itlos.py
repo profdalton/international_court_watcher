@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from bs4 import BeautifulSoup
 
-from base import clean, fetch, find_dates, find_time
+from base import clean, dump_debug, fetch, find_dates, find_time
 
 URL = "https://www.itlos.org/en/main/cases/schedule-of-hearings/"
 NO_HEARING_MARKERS = ("no dates set", "no hearing")
@@ -50,7 +50,7 @@ def scrape() -> list[dict]:
                 }
             )
 
-    for tag in main.find_all(["h2", "h3", "h4", "p", "li"]):
+    for tag in main.find_all(["h2", "h3", "h4", "h5", "h6", "p", "li"]):
         text = clean(tag.get_text(" "))
         if not text:
             continue
@@ -75,7 +75,13 @@ def scrape() -> list[dict]:
             current.setdefault("hearing_type", text)
 
     flush()
-    print(f"[itlos] parsed {len(entries)} entries")
+    if not entries:
+        debug_path = dump_debug("itlos", html)
+        print(f"[itlos] parsed 0 entries — either the docket is genuinely empty and the "
+              f"'no dates set' marker text has changed, or the page structure has "
+              f"changed. Raw HTML saved to {debug_path} for a closer look.")
+    else:
+        print(f"[itlos] parsed {len(entries)} entries")
     return entries
 
 

@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from bs4 import BeautifulSoup
 
-from base import clean, fetch, find_dates
+from base import clean, dump_debug, fetch, find_dates
 
 URL = "https://www.wto.org/english/news_e/events_e/events_list_view_e.htm"
 
@@ -60,7 +60,11 @@ def scrape() -> list[dict]:
         )
 
     if not entries:
-        print("[wto] no DSB rows found — page may rely on JS filtering")
+        debug_path = dump_debug("wto", html)
+        print(f"[wto] no DSB rows found — page likely relies on JS filtering to show "
+              f"anything at all client-side. Raw HTML saved to {debug_path}; search it "
+              f"for 'Dispute Settlement Body' to see whether the text is even present "
+              f"in the server-rendered response.")
     else:
         print(f"[wto] parsed {len(entries)} entries")
     return entries

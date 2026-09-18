@@ -71,26 +71,67 @@ prints its own JSON when run directly.
 4. Run `python scrapers/generate_pages.py` to generate
    `courts/<slug>.html`.
 
+If a court doesn't publish a real forward-looking hearings calendar
+(only a news/press feed, like ITLOS), skip step 2 and instead follow
+`scrapers/itlos_news.py` as a template: write to its own
+`data/<slug>-news.json` rather than `data/hearings.json`, and add
+`news_file`/`news_source_url` to its `data/courts.json` entry so
+`generate_pages.py` includes the "Recent announcements" section.
+
 ## Known rough edges
 
-- **ICC** (`scrapers/icc.py`): the calendar page returned a
-  bot-detection block during initial testing. It may behave
-  differently from GitHub's Actions runners — check the workflow logs
-  after the first scheduled run. If it keeps failing, use
-  `data/manual/icc.json` as a stopgap.
-- **WTO** (`scrapers/wto.py`): the official calendar is a JS-driven
-  filter widget over a general meetings list; the scraper reads the
-  server-rendered list and filters by text match, which is the
-  least-tested of the six scrapers.
-- **IACtHR** (`scrapers/iacthr.py`): this court publishes session
-  date ranges rather than individual hearings, so entries read as
-  "192nd Regular Session, through 3 Jul" rather than a case name.
-- **KSC** (`scrapers/ksc.py`): this one's a month-grid calendar
-  (`?calendar_timestamp=YYYY-MM`) rather than a flat list, so the
-  scraper has to guess which grid cells spill over from the
-  previous/next month based on row position — verified against a
-  real July 2026 page, but worth double-checking against the live
-  site after the first run.
+Confirmed from real local runs (see terminal output for the exact
+messages) — all of this fails safe: a broken court just keeps its
+last-known data (`base.replace_court`), it doesn't blank the page.
+
+- **Fixed:** ICJ, ITLOS, and IACtHR all came back empty in testing —
+  not because of their marker text or regexes, but because
+  `base.HEADERS` claimed Brotli (`br`) compression support that
+  wasn't actually installed. The servers sent Brotli-compressed
+  bodies that never got decoded, and `resp.text` returned raw
+  compressed bytes read as garbage text. Fixed by no longer
+  overriding `Accept-Encoding` — `requests` picks a safe default on
+  its own. Worth a re-run to confirm all three parse correctly now.
+- **ICC** and **KSC** both come back `403 Forbidden`, even with a
+  full browser-style header set and retries — unrelated to the
+  Brotli bug above. That rules out a bare User-Agent block — it's a
+  WAF doing something requests can't clear on its own (IP reputation,
+  a JS/cookie challenge, or TLS fingerprinting). Realistic next step
+  for either is a headless-browser fetch (Playwright/Selenium)
+  instead of `requests`, which isn't wired in by default since it's a
+  heavier dependency; in the meantime, `data/manual/icc.json` and
+  `data/manual/ksc.json` are the stopgap.
+- **WTO**: the official calendar is a JS-driven filter widget over a
+  general meetings list; the scraper reads the server-rendered list
+  and filters by text match. It found 0 DSB rows in testing — check
+  whether "Dispute Settlement Body" actually appears in the
+  server-rendered HTML at all, or whether the list only populates via
+  JS.
+- **IACtHR**: session date ranges rather than individual hearings
+  ("192nd Regular Session, through 3 Jul" rather than a case name).
+- **ITLOS**'s hearings feed being empty is usually *correct*, not
+  broken — this tribunal only publishes a Schedule of Hearings entry
+  when something is actually scheduled, which is rare. What it
+  publishes regularly instead is a general press/news feed (workshops,
+  judge elections, case orders, the occasional hearing announcement,
+  all mixed together with no structural way to tell them apart). Since
+  regexing "hearing" out of free-form news text would just produce
+  false positives, `scrapers/itlos_news.py` doesn't try — it pulls the
+  most recent items as plain announcements into their own
+  `data/itlos-news.json`, kept separate from `data/hearings.json` so
+  it can never pollute the cross-court feed or hearing counts.
+  `courts/itlos.html` shows them in a clearly-labeled "Recent
+  announcements" section, distinct from the hearings feed above it. A
+  court gets this section by adding `news_file` (and `news_source_url`)
+  to its `data/courts.json` entry — `scrapers/generate_pages.py` only
+  includes the markup for courts that have it.
+- **KSC**'s month-grid parsing (which cells belong to the
+  previous/next month) was verified against a real July 2026 page
+  layout, so that part should be solid once the 403 above is cleared.
+
+If a scraper ever comes up empty without a clear reason again, check
+`scrapers/.debug/<court>.html` (see `base.dump_debug`) before
+guessing — it's the literal response the scraper received.
 
 None of these will break the site — a scraper that fails or finds
 nothing just leaves that court's last-known data in place (see

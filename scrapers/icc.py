@@ -2,17 +2,24 @@
 
 https://www.icc-cpi.int/court-calendar
 
-Heads up: this page returned a bot-detection block when first
-inspected, even with a normal browser User-Agent. It may behave
-differently from a GitHub Actions runner's IP, so this still tries a
-straightforward fetch first. If it keeps failing, two fallbacks:
+Confirmed 403 Forbidden on a plain fetch, including with a full
+browser-style header set (see base.HEADERS) — this is not just a bare
+`python-requests` User-Agent being blocklisted, so it's likely a WAF
+doing something more (IP reputation, a JS/cookie challenge, or TLS
+fingerprinting that the `requests` library can't reproduce). Realistic
+next steps if this keeps failing from GitHub Actions too:
 
 1. Individual calendar entries appear to live at their own URLs
    (e.g. /court-calendar/icc-official-holiday) with structured
    CalendarID / CaseName / Courtroom / DateOfHearing fields — worth
-   checking whether the main calendar page embeds a fetch to a JSON
-   endpoint that a browser dev-tools Network tab would reveal.
-2. Drop hand-maintained entries in data/manual/icc.json (same record
+   checking whether those are reachable even when the main calendar
+   page isn't, or whether the main page calls a JSON endpoint (check
+   a real browser's Network tab).
+2. A headless-browser fetch (Playwright/Selenium) would clear a JS
+   challenge that plain `requests` cannot; that's a bigger dependency
+   than this project currently carries, so it isn't wired in by
+   default.
+3. Drop hand-maintained entries in data/manual/icc.json (same record
    shape as scrape() returns) and run_all.py will merge them in on
    top of whatever this scraper manages to find.
 """
@@ -27,7 +34,7 @@ URL = "https://www.icc-cpi.int/court-calendar"
 
 def scrape() -> list[dict]:
     try:
-        html = fetch(URL)
+        html = fetch(URL, referer="https://www.icc-cpi.int/")
     except Exception as exc:  # noqa: BLE001
         print(f"[icc] fetch failed (likely bot protection): {exc}")
         return []
@@ -53,7 +60,7 @@ def scrape() -> list[dict]:
                 }
             )
 
-    for tag in main.find_all(["h2", "h3", "h4", "p", "li", "dt", "dd"]):
+    for tag in main.find_all(["h2", "h3", "h4", "h5", "h6", "p", "li", "dt", "dd"]):
         text = clean(tag.get_text(" "))
         if not text:
             continue

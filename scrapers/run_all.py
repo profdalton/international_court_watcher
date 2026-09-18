@@ -26,6 +26,7 @@ import iacthr
 import icc
 import icj
 import itlos
+import itlos_news
 import ksc
 import wto
 
@@ -72,6 +73,14 @@ def main() -> None:
     data["hearings"] = sorted(all_hearings, key=lambda h: (h["date"], h.get("time", "")))
     save_hearings(data)
     print(f"wrote {len(all_hearings)} total hearings to data/hearings.json")
+
+    try:
+        news_items = itlos_news.scrape()
+        if news_items:
+            itlos_news.save(news_items)
+            print(f"wrote {len(news_items)} items to data/itlos-news.json")
+    except Exception as exc:  # noqa: BLE001
+        print(f"[itlos_news] crashed, leaving data/itlos-news.json untouched: {exc}")
 
 
 if __name__ == "__main__":

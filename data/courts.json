@@ -57,7 +57,9 @@
     "calendar_url": "https://www.itlos.org/en/main/cases/schedule-of-hearings/",
     "source_type": "html",
     "granularity": "hearing",
-    "accent": "#2571BB"
+    "accent": "#2571BB",
+    "news_file": "itlos-news.json",
+    "news_source_url": "https://www.itlos.org/en/main/resources/calendar-of-events/"
   },
   "ksc": {
     "name": "Kosovo Specialist Chambers",

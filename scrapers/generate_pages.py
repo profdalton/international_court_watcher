@@ -8,6 +8,7 @@ without regeneration as new hearings come in.
 """
 import json
 from pathlib import Path
+import re
 
 ROOT = Path(__file__).resolve().parent.parent
 COURTS = json.loads((ROOT / "data" / "courts.json").read_text())
@@ -58,6 +59,14 @@ TEMPLATE = """<!doctype html>
     <div class="feed" id="feed"></div>
   </section>
 
+  <!-- NEWS_SECTION_START -->
+  <section class="wrap news-section" id="news-section" style="display:none; padding-top:12px">
+    <h2 class="section-title">Recent announcements</h2>
+    <p class="section-sub">{abbr} doesn't publish a forward-looking hearings calendar the way the other courts here do — these are its own recent press announcements instead, not necessarily upcoming hearings. See the <a href="{news_source_url}" target="_blank" rel="noopener">original feed</a>.</p>
+    <div class="feed" id="news"></div>
+  </section>
+  <!-- NEWS_SECTION_END -->
+
   <footer class="site-footer">
     <div class="wrap foot-row">
       <div>Hearing dates are drawn from the {abbr} public calendar and can change without notice. Always confirm against the <a href="{calendar_url}" target="_blank" rel="noopener">official source</a> before making plans.</div>
@@ -76,10 +85,24 @@ def main():
     out_dir = ROOT / "courts"
     out_dir.mkdir(exist_ok=True)
     for slug, meta in COURTS.items():
-        html = TEMPLATE.format(slug=slug, **meta)
+        meta_filled = {**meta, "news_source_url": meta.get("news_source_url", "")}
+        html = TEMPLATE.format(slug=slug, **meta_filled)
         # fix the official-calendar link text to show the real domain
         domain = meta["calendar_url"].split("/")[2]
         html = html.replace("icj-cij.org &#8599;", f"{domain} &#8599;")
+
+        if "news_file" not in meta:
+            html = re.sub(
+                r"\s*<!-- NEWS_SECTION_START -->.*?<!-- NEWS_SECTION_END -->\n",
+                "\n",
+                html,
+                flags=re.DOTALL,
+            )
+        else:
+            html = html.replace("<!-- NEWS_SECTION_START -->", "").replace(
+                "<!-- NEWS_SECTION_END -->", ""
+            )
+
         (out_dir / f"{slug}.html").write_text(html)
         print(f"wrote courts/{slug}.html")
 

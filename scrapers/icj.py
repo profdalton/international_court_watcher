@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from bs4 import BeautifulSoup
 
-from base import clean, fetch, find_dates, find_time
+from base import clean, dump_debug, fetch, find_dates, find_time
 
 URL = "https://www.icj-cij.org/calendar"
 NO_HEARING_MARKERS = ("no public hearing", "no hearing")
@@ -53,7 +53,7 @@ def scrape() -> list[dict]:
                 }
             )
 
-    for tag in main.find_all(["h2", "h3", "h4", "p", "li"]):
+    for tag in main.find_all(["h2", "h3", "h4", "h5", "h6", "p", "li"]):
         text = clean(tag.get_text(" "))
         if not text:
             continue
@@ -78,7 +78,14 @@ def scrape() -> list[dict]:
             current.setdefault("hearing_type", text)
 
     flush()
-    print(f"[icj] parsed {len(entries)} entries")
+    if not entries:
+        debug_path = dump_debug("icj", html)
+        print(f"[icj] parsed 0 entries — either the docket is genuinely empty and the "
+              f"'no public hearing' marker text has changed, or the page structure has "
+              f"changed. Raw HTML saved to {debug_path} — open it and search for the "
+              f"actual empty-state wording or where hearings should appear.")
+    else:
+        print(f"[icj] parsed {len(entries)} entries")
     return entries
 
 
