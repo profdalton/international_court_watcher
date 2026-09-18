@@ -1,6 +1,56 @@
 {
-  "generated_at": "2026-09-16T00:00:00Z",
+  "generated_at": "2026-09-18T20:21:17Z",
   "hearings": [
+    {
+      "court": "wto",
+      "case_name": "Dispute Settlement Body meeting",
+      "date": "2026-04-21",
+      "time": "",
+      "hearing_type": "DSB meeting",
+      "location": "Geneva",
+      "status": "scheduled",
+      "url": "https://www.wto.org/english/news_e/events_e/events_list_view_e.htm"
+    },
+    {
+      "court": "icc",
+      "case_name": "El Hishri (Libya)",
+      "date": "2026-09-03",
+      "time": "09:30",
+      "hearing_type": "Hearing",
+      "location": "The Hague — Courtroom I",
+      "status": "scheduled",
+      "url": "https://www.icc-cpi.int/court-calendar"
+    },
+    {
+      "court": "icc",
+      "case_name": "Abd-Al-Rahman (Darfur, Sudan)",
+      "date": "2026-09-08",
+      "time": "09:30",
+      "hearing_type": "Hearing",
+      "location": "The Hague — Courtroom I",
+      "status": "scheduled",
+      "url": "https://www.icc-cpi.int/court-calendar"
+    },
+    {
+      "court": "icc",
+      "case_name": "Duterte (Republic of the Philippines)",
+      "date": "2026-09-16",
+      "time": "10:30",
+      "hearing_type": "Hearing",
+      "location": "The Hague — Courtroom I",
+      "status": "scheduled",
+      "url": "https://www.icc-cpi.int/court-calendar"
+    },
+    {
+      "court": "iacthr",
+      "case_name": "195th Regular Session",
+      "date": "2026-09-21",
+      "time": "",
+      "hearing_type": "Regular session, through 25 Sep 2026",
+      "location": "San José, Costa Rica",
+      "status": "scheduled",
+      "url": "https://www.corteidh.or.cr/periodo_de_sesiones.cfm?lang=en"
+    },
     {
       "court": "echr",
       "case_name": "Ukrainian Helsinki Human Rights Union on behalf of ten Ukrainian children v. Russia (no. 6719/23)",
@@ -10,6 +60,56 @@
       "location": "Strasbourg",
       "status": "scheduled",
       "url": "https://www.echr.coe.int/calendar-of-hearings"
+    },
+    {
+      "court": "icc",
+      "case_name": "Said (Central African Republic II)",
+      "date": "2026-09-23",
+      "time": "11:00",
+      "hearing_type": "Hearing",
+      "location": "The Hague — Courtroom I",
+      "status": "scheduled",
+      "url": "https://www.icc-cpi.int/court-calendar"
+    },
+    {
+      "court": "icc",
+      "case_name": "Yekatom and Ngaïssona (Central African Republic II)",
+      "date": "2026-10-01",
+      "time": "09:30",
+      "hearing_type": "Hearing",
+      "location": "The Hague — Courtroom I",
+      "status": "scheduled",
+      "url": "https://www.icc-cpi.int/court-calendar"
+    },
+    {
+      "court": "iacthr",
+      "case_name": "196th Regular Session",
+      "date": "2026-10-05",
+      "time": "",
+      "hearing_type": "Regular session, through 16 Oct 2026",
+      "location": "San José, Costa Rica",
+      "status": "scheduled",
+      "url": "https://www.corteidh.or.cr/periodo_de_sesiones.cfm?lang=en"
+    },
+    {
+      "court": "iacthr",
+      "case_name": "197th Regular Session",
+      "date": "2026-11-02",
+      "time": "",
+      "hearing_type": "Regular session, through 04 Nov 2026",
+      "location": "San José, Costa Rica",
+      "status": "scheduled",
+      "url": "https://www.corteidh.or.cr/periodo_de_sesiones.cfm?lang=en"
+    },
+    {
+      "court": "iacthr",
+      "case_name": "198th Regular Session",
+      "date": "2026-11-16",
+      "time": "",
+      "hearing_type": "Regular session, through 04 Dec 2026",
+      "location": "San José, Costa Rica",
+      "status": "scheduled",
+      "url": "https://www.corteidh.or.cr/periodo_de_sesiones.cfm?lang=en"
     },
     {
       "court": "echr",
@@ -46,7 +146,7 @@
       "case_name": "Z and Others v. Finland (no. 42758/23)",
       "date": "2027-01-20",
       "time": "09:15",
-      "hearing_type": "Grand Chamber hearing",
+      "hearing_type": "Public hearings",
       "location": "Strasbourg",
       "status": "scheduled",
       "url": "https://www.echr.coe.int/calendar-of-hearings"
