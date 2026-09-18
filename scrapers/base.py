@@ -29,61 +29,37 @@ import time
 from datetime import date, datetime
 from pathlib import Path
 
-import requests
-from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
+from curl_cffi.requests import Session
+from curl_cffi.requests.exceptions import HTTPError, RequestException
 
 ROOT = Path(__file__).resolve().parent.parent
 HEARINGS_PATH = ROOT / "data" / "hearings.json"
 
+# Which real browser's TLS/HTTP fingerprint curl_cffi impersonates.
+# This is the actual fix for ICC/KSC's 403s (as far as we could tell
+# without live access to test against): plain `requests` (via
+# urllib3/OpenSSL) has a TLS handshake that's trivially distinguishable
+# from a real browser's, no matter how convincing the headers look.
+# curl_cffi wraps libcurl with a patched TLS stack that reproduces a
+# specific real browser's handshake, which is what a WAF checking for
+# that fingerprint actually cares about. If ICC/KSC still 403 with
+# this, the fingerprint isn't the (only) thing being checked — see the
+# "Known rough edges" section of the README for the next step
+# (a real headless browser).
+IMPERSONATE = "chrome124"
+
 HEADERS = {
-    # A full, realistic Chrome-on-Windows header set. Several of these
-    # sites block bare `python-requests` (default UA, no Accept, no
-    # Sec-Fetch-* headers) even when they don't run a full JS
-    # challenge — this is the "look like a normal tab opening the
-    # page" version, not a strong workaround for something like
-    # Cloudflare's managed challenge.
-    "User-Agent": (
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-        "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
-    ),
+    # curl_cffi's `impersonate` already sets a matching User-Agent and
+    # the low-level TLS/HTTP2 fingerprint; these are the extra bits
+    # worth setting on top of that.
     "Accept": (
         "text/html,application/xhtml+xml,application/xml;q=0.9,"
         "image/avif,image/webp,*/*;q=0.8"
     ),
     "Accept-Language": "en-US,en;q=0.9",
-    "Connection": "keep-alive",
-    # Deliberately NOT setting Accept-Encoding here. `requests` sets a
-    # safe default on its own (gzip, deflate — both handled by the
-    # stdlib, no extra dependency) based on what it can actually
-    # decompress. Claiming "br" (Brotli) without the optional `brotli`
-    # package installed caused a real bug: the server would send
-    # Brotli-compressed bodies that never got decoded, and resp.text
-    # returned raw compressed bytes decoded as garbage text — which
-    # silently broke ICJ, ITLOS, and IACtHR at once (all three do
-    # support Brotli; ECHR apparently doesn't, which is why it kept
-    # working). If Brotli support is ever added on purpose, add
-    # `brotli` to requirements.txt *first*.
-    "Upgrade-Insecure-Requests": "1",
-    "Sec-Fetch-Dest": "document",
-    "Sec-Fetch-Mode": "navigate",
-    "Sec-Fetch-Site": "none",
-    "Sec-Fetch-User": "?1",
-    "Sec-CH-UA": '"Chromium";v="124", "Google Chrome";v="124", "Not-A.Brand";v="99"',
-    "Sec-CH-UA-Mobile": "?0",
-    "Sec-CH-UA-Platform": '"Windows"',
 }
 
-_session = requests.Session()
-_session.headers.update(HEADERS)
-_retry = Retry(
-    total=3,
-    backoff_factor=1.5,  # 1.5s, 3s, 6s between retries
-    status_forcelist=[429, 500, 502, 503, 504],
-    allowed_methods=["GET"],
-)
-_session.mount("https://", HTTPAdapter(max_retries=_retry))
-_session.mount("http://", HTTPAdapter(max_retries=_retry))
+_session = Session(impersonate=IMPERSONATE, headers=HEADERS)
 
 MONTHS = (
     "January|February|March|April|May|June|July|August|September|"
@@ -95,20 +71,179 @@ DATE_RE = re.compile(
 )
 TIME_RE = re.compile(r"\b([01]?\d|2[0-3])[:h]([0-5]\d)\b")
 
+_RETRYABLE_STATUS = {429, 500, 502, 503, 504}
+_MAX_ATTEMPTS = 3
+_BACKOFF_SECONDS = 1.5  # 1.5s, 3s between attempts
+
 
 def fetch(url: str, timeout: int = 30, referer: str | None = None) -> str:
-    """GET a page with browser-like headers, retrying transient errors
-    (timeouts, 5xx, 429) up to 3 times with backoff. A 403/401 is
-    treated as a real block, not a transient error, and is raised
-    immediately — retrying with the same headers won't help; that
-    means the site's bot protection is doing more than a UA check
-    (see the module docstrings in icc.py / ksc.py for what to try
-    next in that case).
+    """GET a page impersonating a real Chrome TLS/HTTP fingerprint
+    (see IMPERSONATE above), retrying transient errors (timeouts,
+    connection errors, 5xx, 429) up to 3 times with backoff. A 403/401
+    is treated as a real block, not a transient error, and is raised
+    immediately — retrying the identical request won't help; if this
+    still happens with curl_cffi, the WAF is checking something beyond
+    the TLS fingerprint (see icc.py / ksc.py docstrings).
     """
     req_headers = {"Referer": referer} if referer else {}
-    resp = _session.get(url, headers=req_headers, timeout=timeout)
-    resp.raise_for_status()
-    return resp.text
+    last_exc: Exception | None = None
+
+    for attempt in range(1, _MAX_ATTEMPTS + 1):
+        try:
+            resp = _session.get(url, headers=req_headers, timeout=timeout)
+            resp.raise_for_status()
+            return resp.text
+        except HTTPError as exc:
+            status = getattr(exc.response, "status_code", None)
+            if status in _RETRYABLE_STATUS and attempt < _MAX_ATTEMPTS:
+                last_exc = exc
+                time.sleep(_BACKOFF_SECONDS * attempt)
+                continue
+            raise
+        except RequestException as exc:
+            # Connection errors, timeouts, and other libcurl-level
+            # failures — worth a retry, unlike a definitive HTTP status.
+            if attempt < _MAX_ATTEMPTS:
+                last_exc = exc
+                time.sleep(_BACKOFF_SECONDS * attempt)
+                continue
+            raise
+
+    raise last_exc  # pragma: no cover — loop always returns or raises above
+
+
+# A handful of very different browser fingerprints to try in sequence
+# when the default IMPERSONATE gets a flat 403 — worth a shot before
+# concluding a site needs a real headless browser, since some WAFs
+# key on specific fingerprints (an outdated-looking one, or one seen
+# in a lot of scraper traffic) rather than "is this curl_cffi at
+# all". No retries within each attempt (a 403 isn't transient), so
+# this is fast even when every fingerprint fails.
+FALLBACK_FINGERPRINTS = ("chrome136", "safari184", "firefox147", "edge101")
+
+
+def fetch_try_fingerprints(
+    url: str, timeout: int = 30, referer: str | None = None
+) -> tuple[str, str]:
+    """Like fetch(), but on a 403 tries each of FALLBACK_FINGERPRINTS
+    before giving up, returning (html, fingerprint_that_worked). Use
+    this for a site still 403ing under the default IMPERSONATE — it's
+    slower (up to len(FALLBACK_FINGERPRINTS) sequential attempts) so
+    it's not the default for every scraper.
+    """
+    req_headers = {"Referer": referer} if referer else {}
+    last_exc: Exception | None = None
+
+    for fp in (IMPERSONATE, *FALLBACK_FINGERPRINTS):
+        try:
+            resp = _session.get(url, headers=req_headers, timeout=timeout, impersonate=fp)
+            resp.raise_for_status()
+            return resp.text, fp
+        except HTTPError as exc:
+            last_exc = exc
+            continue
+        except RequestException as exc:
+            last_exc = exc
+            continue
+
+    raise last_exc
+
+
+# ---------------------------------------------------------------
+# Real-browser fetch, for pages that render via JavaScript (ICC) or
+# whose WAF isn't satisfied by any curl_cffi fingerprint (KSC).
+# Playwright drives an actual headless Chromium, so it executes JS
+# and presents a real TLS/HTTP stack a WAF can't distinguish from a
+# person's browser. It's much heavier than fetch()/fetch_try_
+# fingerprints() — a browser process per call, seconds instead of
+# milliseconds — so use it only where those genuinely aren't enough.
+#
+# Needs `playwright install chromium` run once (locally, and as a
+# step in the GitHub Actions workflow) to download the browser
+# binary — installing the `playwright` pip package alone is not
+# enough. See README.md.
+# ---------------------------------------------------------------
+_pw = None
+_browser = None
+
+
+def _get_browser():
+    """Lazily start one Playwright instance + browser process, shared
+    across every fetch_rendered() call in this run, and registered to
+    close automatically when the script exits."""
+    global _pw, _browser
+    if _browser is None:
+        import atexit
+
+        from playwright.sync_api import sync_playwright
+
+        _pw = sync_playwright().start()
+        _browser = _pw.chromium.launch(headless=True)
+        atexit.register(_close_browser)
+    return _browser
+
+
+def _close_browser():
+    global _pw, _browser
+    if _browser is not None:
+        _browser.close()
+        _browser = None
+    if _pw is not None:
+        _pw.stop()
+        _pw = None
+
+
+def fetch_rendered(
+    url: str,
+    timeout: int = 30,
+    referer: str | None = None,
+    wait_selector: str | None = None,
+    extra_wait_ms: int = 3000,
+) -> str:
+    """Load a page in headless Chromium and return the DOM after JS
+    has run, instead of the raw server response fetch()/fetch_try_
+    fingerprints() return.
+
+    Uses wait_until="domcontentloaded" rather than "networkidle" —
+    the latter waits for a stretch of complete network silence, which
+    plenty of ordinary sites never reach (analytics beacons, ad
+    trackers, chat widgets, polling) and can hang for the full
+    timeout even on a page that rendered fine. domcontentloaded fires
+    once the initial HTML/DOM is ready, and the extra_wait_ms /
+    wait_selector below give the page's own JS time to actually
+    populate content after that.
+
+    wait_selector: a CSS selector to wait for before reading the page
+    (e.g. a row that only appears once the calendar has actually
+    populated). If given but never appears, this falls through and
+    returns whatever loaded anyway rather than raising — a partial
+    page is more useful for debugging than nothing. If omitted, this
+    just waits `extra_wait_ms` after the DOM is ready, which is
+    cruder but doesn't require knowing the real selector in advance.
+    """
+    browser = _get_browser()
+    extra_headers = {"Referer": referer} if referer else {}
+    context = browser.new_context(
+        user_agent=(
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+            "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+        ),
+        locale="en-US",
+        extra_http_headers=extra_headers,
+    )
+    try:
+        page = context.new_page()
+        page.goto(url, timeout=timeout * 1000, wait_until="domcontentloaded")
+        if wait_selector:
+            try:
+                page.wait_for_selector(wait_selector, timeout=timeout * 1000)
+            except Exception:  # noqa: BLE001
+                pass  # return whatever DID load rather than raising
+        else:
+            page.wait_for_timeout(extra_wait_ms)
+        return page.content()
+    finally:
+        context.close()
 
 
 def parse_date(match: re.Match) -> date | None:

@@ -25,7 +25,7 @@ import re
 
 from bs4 import BeautifulSoup
 
-from base import ROOT, clean, fetch, find_dates
+from base import ROOT, clean, dump_debug, fetch, find_dates
 
 URL = "https://www.itlos.org/en/main/resources/calendar-of-events/"
 NEWS_PATH = ROOT / "data" / "itlos-news.json"
@@ -50,12 +50,21 @@ def scrape() -> list[dict]:
         if current and current.get("title"):
             items.append(current)
 
-    for tag in main.find_all(["h2", "h3", "h4", "p", "a"]):
+    # The date is plain, short text sitting somewhere near each item —
+    # its exact tag varies by CMS theme (p, span, div, time all seen
+    # in the wild for this kind of "date above headline" layout), so
+    # rather than guess one tag, this matches any *leaf* element (no
+    # child tags of its own — ruling out wrapper divs/sections whose
+    # get_text() would swallow the whole item) whose text is only a
+    # date. Titles still come from real headings; links from <a>.
+    candidates = main.find_all(["h2", "h3", "h4", "p", "span", "div", "time", "a"])
+    for tag in candidates:
         text = clean(tag.get_text(" "))
         if not text:
             continue
 
-        if tag.name != "a" and PURE_DATE_RE.match(text):
+        is_leaf = tag.find(True) is None
+        if tag.name != "a" and is_leaf and PURE_DATE_RE.match(text):
             dates = list(find_dates(text))
             if not dates:
                 continue
@@ -70,7 +79,7 @@ def scrape() -> list[dict]:
             current["title"] = text
             continue
 
-        if tag.name == "p" and "title" in current and "summary" not in current:
+        if tag.name == "p" and is_leaf and "title" in current and "summary" not in current:
             current["summary"] = text[:200]
             continue
 
@@ -81,7 +90,15 @@ def scrape() -> list[dict]:
 
     flush()
     items = items[:MAX_ITEMS]
-    print(f"[itlos_news] parsed {len(items)} announcements")
+    if not items:
+        debug_path = dump_debug("itlos_news", html)
+        print(f"[itlos_news] parsed 0 announcements — worked against synthetic test "
+              f"markup but not the live page, so the real markup differs from what "
+              f"was assumed (likely which tag wraps each item's date). Raw HTML "
+              f"saved to {debug_path} — look for the date text near the first news "
+              f"item and check what tag actually contains it.")
+    else:
+        print(f"[itlos_news] parsed {len(items)} announcements")
     return items
 
 

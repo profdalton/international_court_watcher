@@ -54,12 +54,19 @@ to compile or deploy beyond pushing the files.
 ```bash
 cd scrapers
 pip install -r ../requirements.txt
+playwright install chromium
 python run_all.py
 ```
 
-This rewrites `data/hearings.json` in place. Run an individual
-scraper on its own to debug it, e.g. `python echr.py` — each module
-prints its own JSON when run directly.
+That `playwright install chromium` step only needs to run once (or
+again after a `playwright` version bump) — it downloads the actual
+browser binary, which the `playwright` pip package alone does not
+include. Skipping it will make `icc.py`/`ksc.py` fail with a clear
+"executable doesn't exist" error telling you to run it.
+
+This rewrites `data/hearings.json` (and `data/itlos-news.json`) in
+place. Run an individual scraper on its own to debug it, e.g.
+`python echr.py` — each module prints its own JSON when run directly.
 
 ## Adding a court
 
@@ -92,21 +99,38 @@ last-known data (`base.replace_court`), it doesn't blank the page.
   compressed bytes read as garbage text. Fixed by no longer
   overriding `Accept-Encoding` — `requests` picks a safe default on
   its own. Worth a re-run to confirm all three parse correctly now.
-- **ICC** and **KSC** both come back `403 Forbidden`, even with a
-  full browser-style header set and retries — unrelated to the
-  Brotli bug above. That rules out a bare User-Agent block — it's a
-  WAF doing something requests can't clear on its own (IP reputation,
-  a JS/cookie challenge, or TLS fingerprinting). Realistic next step
-  for either is a headless-browser fetch (Playwright/Selenium)
-  instead of `requests`, which isn't wired in by default since it's a
-  heavier dependency; in the meantime, `data/manual/icc.json` and
-  `data/manual/ksc.json` are the stopgap.
-- **WTO**: the official calendar is a JS-driven filter widget over a
-  general meetings list; the scraper reads the server-rendered list
-  and filters by text match. It found 0 DSB rows in testing — check
-  whether "Dispute Settlement Body" actually appears in the
-  server-rendered HTML at all, or whether the list only populates via
-  JS.
+- **ICC is now fully working**, rewritten against real markup the
+  user pasted directly (not guessed): it's FullCalendar.js, each
+  week is a `.fc-content-skeleton` table with a `<thead>` row giving
+  each day's exact `data-date` attribute and a `<tbody>` row in the
+  same column order with the actual hearings — matched by position
+  via `zip()`, so no month-rollover guessing is needed (unlike KSC's
+  grid, which doesn't expose dates this directly). Bonus: hearing
+  color-classes map back to a courtroom via the page's own "Courtroom
+  I/II/III" legend, so `location` includes which courtroom. Verified
+  against the real snippet the user shared — parsed both example
+  hearings ("El Hishri (Libya)", "Abd-Al-Rahman (Darfur, Sudan)")
+  with correct dates, times, and courtrooms.
+- **KSC**: a real headless browser gets a Cloudflare-style "performing
+  security verification" challenge page instead of the calendar —
+  confirmed by inspecting the live output directly. This is a
+  fundamentally harder problem than anything else on this list: it's
+  not a missing fingerprint or un-rendered JS, it's active detection
+  of the automated browser itself. `_scrape_month` now waits longer
+  (7s) on the chance a non-interactive challenge clears on its own,
+  and reports clearly when it's still stuck on the challenge page
+  rather than misreporting it as "no table found". If the longer wait
+  doesn't clear it, further options (stealth-patched browser
+  automation, CAPTCHA-solving services) exist but amount to an
+  escalating arms race against a security product built to resist
+  exactly that — `data/manual/ksc.json` is the sensible stopping
+  point at that stage, not a consolation prize.
+- **WTO**: found a real entry (1 DSB meeting) on the first run with
+  working JS rendering — the row-matching logic is doing its job,
+  though with only one data point so far it's still the
+  least-battle-tested scraper of the seven. Worth a skim of
+  `courts/wto.html` to confirm that entry looks like a genuine
+  meeting and not a false match.
 - **IACtHR**: session date ranges rather than individual hearings
   ("192nd Regular Session, through 3 Jul" rather than a case name).
 - **ITLOS**'s hearings feed being empty is usually *correct*, not
@@ -124,7 +148,12 @@ last-known data (`base.replace_court`), it doesn't blank the page.
   announcements" section, distinct from the hearings feed above it. A
   court gets this section by adding `news_file` (and `news_source_url`)
   to its `data/courts.json` entry — `scrapers/generate_pages.py` only
-  includes the markup for courts that have it.
+  includes the markup for courts that have it. First real run against
+  the live page found 0 items (worked fine on synthetic test markup,
+  so the assumption about which tag wraps each item's date was wrong)
+  — widened to match a date in any short leaf tag (p/span/div/time),
+  not just `<p>`, and now dumps debug HTML on a 0-item result too;
+  worth confirming this actually fixed it on the next run.
 - **KSC**'s month-grid parsing (which cells belong to the
   previous/next month) was verified against a real July 2026 page
   layout, so that part should be solid once the 403 above is cleared.
