@@ -1,0 +1,343 @@
+/* ============================================================
+   International Court Watcher — design tokens
+   ============================================================ */
+:root {
+  /* Color */
+  --ink: #24272a;
+  --ink-soft: #565b5f;
+  --paper: #f5f7f7;
+  --paper-raised: #ffffff;
+  --line: #dde2e2;
+  --brand: #2571bb;      /* logo blue */
+  --brand-dark: #1c568f;
+  --accent: #ef6530;      /* orange, from palette */
+  --accent-soft: #fbe3d2; /* peach tint */
+  --sky: #d4edf4;         /* light blue tint */
+  --slate: #345c72;       /* secondary ink / section rules */
+
+  /* Per-court accents (also defined inline per page via data-court) */
+  --c-icj: #2a2e30;
+  --c-icc: #345c72;
+  --c-echr: #ef6530;
+  --c-iacthr: #d1834a;
+  --c-itlos: #2571bb;
+  --c-wto: #4a90a4;
+
+  /* Type */
+  --font-display: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+  --font-body: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+
+  /* Layout */
+  --col: 880px;
+  --col-narrow: 680px;
+  --radius: 3px;
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--brand-dark);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+a:hover { color: var(--accent); }
+
+img { max-width: 100%; display: block; }
+
+.wrap {
+  max-width: var(--col);
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* ---------- Header / nav ---------- */
+.site-header {
+  border-bottom: 1px solid var(--line);
+  background: var(--paper-raised);
+}
+.site-header .wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 18px;
+  padding-bottom: 18px;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: var(--ink);
+}
+.brand img { width: 36px; height: 36px; border-radius: 8px; }
+.brand-name {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.brand-name span { color: var(--brand); }
+
+.site-nav { display: flex; align-items: center; }
+.site-nav a {
+  color: var(--ink-soft);
+  text-decoration: none;
+  font-size: 0.92rem;
+  margin-left: 22px;
+}
+.site-nav a:first-child { margin-left: 0; }
+.site-nav a:hover { color: var(--accent); }
+.site-nav a.github {
+  border: 1px solid var(--line);
+  padding: 6px 12px;
+  border-radius: 5px;
+  color: var(--ink);
+}
+.site-nav a.github:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ---------- Hero ---------- */
+.hero {
+  padding: 64px 0 40px;
+  border-bottom: 1px solid var(--line);
+}
+.hero h1 {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 4.2vw, 3.1rem);
+  line-height: 1.12;
+  font-weight: 600;
+  margin: 0 0 18px;
+  max-width: 14ch;
+  letter-spacing: -0.01em;
+}
+.hero p {
+  max-width: 56ch;
+  font-size: 1.08rem;
+  color: var(--ink-soft);
+  margin: 0 0 6px;
+}
+.hero .updated {
+  margin-top: 18px;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  font-family: var(--font-mono);
+}
+
+/* ---------- Filter chips ---------- */
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 22px 0;
+}
+.chip {
+  border: 1px solid var(--line);
+  background: var(--paper-raised);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 0.86rem;
+  padding: 7px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.chip .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.chip[aria-pressed="true"] {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: #fff;
+}
+.chip[aria-pressed="true"] .dot { outline: 1.5px solid #fff; }
+
+/* ---------- Hearings feed ---------- */
+.feed { padding-bottom: 36px; }
+.month-heading {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--slate);
+  margin: 34px 0 10px;
+  padding-top: 6px;
+}
+.month-heading:first-child { margin-top: 0; }
+
+.hearing-row {
+  display: grid;
+  grid-template-columns: 64px 96px 110px 1fr;
+  gap: 14px;
+  align-items: start;
+  padding: 14px 12px;
+  border-bottom: 1px solid var(--line);
+  border-left: 3px solid var(--row-accent, var(--brand));
+  background: var(--paper-raised);
+}
+.hearing-row + .hearing-row { margin-top: 6px; }
+.hearing-row .date {
+  font-family: var(--font-mono);
+  font-size: 1.4rem;
+  line-height: 1;
+  color: var(--ink);
+}
+.hearing-row .weekday {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--ink-soft);
+  display: block;
+  margin-top: 3px;
+}
+.hearing-row .time {
+  font-family: var(--font-mono);
+  font-size: 0.86rem;
+  color: var(--ink-soft);
+  padding-top: 3px;
+}
+.hearing-row .court-tag {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--row-accent, var(--brand));
+  padding-top: 3px;
+}
+.hearing-row .case {
+  font-size: 0.98rem;
+}
+.hearing-row .case .type {
+  display: block;
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+  margin-top: 3px;
+}
+.empty-state {
+  padding: 30px 16px;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+  color: var(--ink-soft);
+  font-size: 0.95rem;
+}
+
+/* ---------- Court grid ---------- */
+.section-title {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0 0 4px;
+}
+.section-sub { color: var(--ink-soft); margin: 0 0 22px; font-size: 0.96rem; }
+
+.court-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+  margin-bottom: 56px;
+}
+.court-card {
+  background: var(--paper-raised);
+  padding: 22px 20px;
+  border-top: 3px solid var(--card-accent, var(--brand));
+  text-decoration: none;
+  color: var(--ink);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.court-card:hover { background: var(--sky); }
+.court-card .abbr {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+}
+.court-card h3 {
+  font-family: var(--font-display);
+  margin: 0;
+  font-size: 1.12rem;
+}
+.court-card .seat { font-size: 0.86rem; color: var(--ink-soft); }
+.court-card .count {
+  margin-top: 8px;
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+/* ---------- Court detail page ---------- */
+.court-header { padding: 48px 0 28px; border-bottom: 1px solid var(--line); }
+.court-header .abbr-tag {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  padding: 3px 9px;
+  border-radius: 999px;
+  color: #fff;
+  background: var(--page-accent, var(--brand));
+  margin-bottom: 14px;
+}
+.court-header h1 {
+  font-family: var(--font-display);
+  font-size: clamp(1.7rem, 3.4vw, 2.5rem);
+  margin: 0 0 12px;
+  letter-spacing: -0.01em;
+}
+.court-header .blurb { max-width: 60ch; color: var(--ink-soft); font-size: 1.02rem; }
+.court-meta {
+  display: flex;
+  gap: 28px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+  font-size: 0.88rem;
+}
+.court-meta div span {
+  display: block;
+  color: var(--ink-soft);
+  font-size: 0.76rem;
+  margin-bottom: 2px;
+}
+.court-meta a { font-family: var(--font-mono); }
+
+/* ---------- Footer ---------- */
+.site-footer {
+  border-top: 1px solid var(--line);
+  padding: 30px 0 50px;
+  color: var(--ink-soft);
+  font-size: 0.86rem;
+}
+.site-footer a { color: var(--ink-soft); }
+.site-footer .foot-row {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 760px) {
+  .court-grid { grid-template-columns: 1fr; }
+  .hearing-row {
+    grid-template-columns: 52px 1fr;
+    grid-template-areas:
+      "date court"
+      "date time"
+      "case case";
+  }
+  .hearing-row .date { grid-area: date; }
+  .hearing-row .court-tag { grid-area: court; padding-top: 0; }
+  .hearing-row .time { grid-area: time; }
+  .hearing-row .case { grid-area: case; margin-top: 6px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { scroll-behavior: auto !important; }
+}

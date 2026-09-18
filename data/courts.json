@@ -1,0 +1,74 @@
+{
+  "icj": {
+    "name": "International Court of Justice",
+    "abbr": "ICJ",
+    "seat": "The Hague, Netherlands",
+    "established": "1945",
+    "system": "United Nations",
+    "blurb": "The UN's principal judicial organ, settling legal disputes between states and giving advisory opinions to UN bodies.",
+    "calendar_url": "https://www.icj-cij.org/calendar",
+    "source_type": "html",
+    "granularity": "hearing",
+    "accent": "#2A2E30"
+  },
+  "icc": {
+    "name": "International Criminal Court",
+    "abbr": "ICC",
+    "seat": "The Hague, Netherlands",
+    "established": "2002",
+    "system": "Rome Statute",
+    "blurb": "A permanent court trying individuals for genocide, war crimes, crimes against humanity, and the crime of aggression.",
+    "calendar_url": "https://www.icc-cpi.int/court-calendar",
+    "source_type": "html",
+    "granularity": "hearing",
+    "accent": "#345C72"
+  },
+  "echr": {
+    "name": "European Court of Human Rights",
+    "abbr": "ECHR",
+    "seat": "Strasbourg, France",
+    "established": "1959",
+    "system": "Council of Europe",
+    "blurb": "Hears cases alleging violations of the European Convention on Human Rights by Council of Europe member states.",
+    "calendar_url": "https://www.echr.coe.int/calendar-of-hearings",
+    "source_type": "html",
+    "granularity": "hearing",
+    "accent": "#EF6530"
+  },
+  "iacthr": {
+    "name": "Inter-American Court of Human Rights",
+    "abbr": "IACtHR",
+    "seat": "San Jos\u00e9, Costa Rica",
+    "established": "1979",
+    "system": "Organization of American States",
+    "blurb": "Interprets and applies the American Convention on Human Rights across the OAS member states that accept its jurisdiction.",
+    "calendar_url": "https://www.corteidh.or.cr/periodo_de_sesiones.cfm?lang=en",
+    "source_type": "html",
+    "granularity": "session",
+    "accent": "#F39E7B"
+  },
+  "itlos": {
+    "name": "International Tribunal for the Law of the Sea",
+    "abbr": "ITLOS",
+    "seat": "Hamburg, Germany",
+    "established": "1996",
+    "system": "UNCLOS",
+    "blurb": "Adjudicates disputes over the interpretation and application of the UN Convention on the Law of the Sea.",
+    "calendar_url": "https://www.itlos.org/en/main/cases/schedule-of-hearings/",
+    "source_type": "html",
+    "granularity": "hearing",
+    "accent": "#2571BB"
+  },
+  "wto": {
+    "name": "WTO Dispute Settlement Body",
+    "abbr": "WTO DSB",
+    "seat": "Geneva, Switzerland",
+    "established": "1995",
+    "system": "World Trade Organization",
+    "blurb": "The General Council sitting as the DSB, which oversees trade dispute proceedings between WTO members.",
+    "calendar_url": "https://www.wto.org/english/news_e/events_e/events_list_view_e.htm",
+    "source_type": "html",
+    "granularity": "meeting",
+    "accent": "#D4EDF4"
+  }
+}

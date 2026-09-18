@@ -1,0 +1,55 @@
+{
+  "generated_at": "2026-09-16T00:00:00Z",
+  "hearings": [
+    {
+      "court": "echr",
+      "case_name": "Ukrainian Helsinki Human Rights Union on behalf of ten Ukrainian children v. Russia (no. 6719/23)",
+      "date": "2026-09-22",
+      "time": "09:15",
+      "hearing_type": "Chamber hearing",
+      "location": "Strasbourg",
+      "status": "scheduled",
+      "url": "https://www.echr.coe.int/calendar-of-hearings"
+    },
+    {
+      "court": "echr",
+      "case_name": "Ahmad v. Denmark and Makki v. Denmark (nos. 5712/24 and 24292/24)",
+      "date": "2026-12-02",
+      "time": "09:15",
+      "hearing_type": "Grand Chamber hearing",
+      "location": "Strasbourg",
+      "status": "scheduled",
+      "url": "https://www.echr.coe.int/calendar-of-hearings"
+    },
+    {
+      "court": "echr",
+      "case_name": "Macagnino and Marzo v. Italy (nos. 61799/15 and 62690/15) and Cavallotti and Others v. Italy (nos. 29614/16 and 3 others)",
+      "date": "2026-12-16",
+      "time": "09:15",
+      "hearing_type": "Grand Chamber hearing",
+      "location": "Strasbourg",
+      "status": "scheduled",
+      "url": "https://www.echr.coe.int/calendar-of-hearings"
+    },
+    {
+      "court": "echr",
+      "case_name": "Knopp v. Hungary (no. 22931/18)",
+      "date": "2027-01-13",
+      "time": "09:15",
+      "hearing_type": "Grand Chamber hearing",
+      "location": "Strasbourg",
+      "status": "scheduled",
+      "url": "https://www.echr.coe.int/calendar-of-hearings"
+    },
+    {
+      "court": "echr",
+      "case_name": "Z and Others v. Finland (no. 42758/23)",
+      "date": "2027-01-20",
+      "time": "09:15",
+      "hearing_type": "Grand Chamber hearing",
+      "location": "Strasbourg",
+      "status": "scheduled",
+      "url": "https://www.echr.coe.int/calendar-of-hearings"
+    }
+  ]
+}
